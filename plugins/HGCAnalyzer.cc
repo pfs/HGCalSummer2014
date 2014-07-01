@@ -81,6 +81,10 @@ void HGCAnalyzer::analyze( const edm::Event &iEvent, const edm::EventSetup &iSet
 
     }
 
+  //PF clusters
+  //hgcEvt_.nclus=0;
+  
+
   //hits
   hgcEvt_.nhits=0;
   for(size_t i=0; i<hitCollections_.size(); i++)
@@ -102,9 +106,8 @@ void HGCAnalyzer::analyze( const edm::Event &iEvent, const edm::EventSetup &iSet
 	  int layer= ((detId>>19)&0x1f);
 	  hgcEvt_.hit_layer[hgcEvt_.nhits]=layer;
 
-	  //const FlatTrd *thisCell = static_cast<const FlatTrd*>(hgcGeo.getGeometry(detId));
 	  const GlobalPoint pos( std::move( hgcGeo.getPosition( detId ) ) );
-
+	  cout << pos.x() << " " << pos.y() << endl; 
 	  hgcEvt_.hit_x[hgcEvt_.nhits]=pos.x();
 	  hgcEvt_.hit_y[hgcEvt_.nhits]=pos.y();
 	  hgcEvt_.hit_z[hgcEvt_.nhits]=pos.z();
