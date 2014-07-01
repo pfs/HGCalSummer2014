@@ -10,6 +10,10 @@
 #include "FWCore/Utilities/interface/Exception.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 
+#include "Geometry/FCalGeometry/interface/HGCalGeometry.h"
+#include "DataFormats/HGCRecHit/interface/HGCRecHitCollections.h"
+
+
 #include <iostream>
 
 using namespace std;
@@ -19,7 +23,9 @@ HGCAnalyzer::HGCAnalyzer( const edm::ParameterSet &iConfig ) : t_(0)
 {
   genSource_       = iConfig.getParameter< std::string >("genSource");
   trackSource_     = iConfig.getParameter< std::string >("trackSource");
+  geometrySource_  = iConfig.getParameter< std::vector<std::string> >("geometrySource");
   hitCollections_  = iConfig.getParameter< std::vector<std::string> >("hitCollections");
+  hitThresholds_   = iConfig.getParameter< std::vector<double> >("hitThresholds");
 
   edm::Service<TFileService> fs;
   t_=fs->make<TTree>("HGC","Event Summary");
@@ -79,11 +85,41 @@ void HGCAnalyzer::analyze( const edm::Event &iEvent, const edm::EventSetup &iSet
   hgcEvt_.nhits=0;
   for(size_t i=0; i<hitCollections_.size(); i++)
     {
-      
+      edm::Handle<HGCRecHitCollection> pfhits;
+      iEvent.getByLabel(edm::InputTag(hitCollections_[i]), pfhits);
+
+      edm::ESHandle<HGCalGeometry> geoHandle;
+      iSetup.get<IdealGeometryRecord>().get(geometrySource_[i],geoHandle);
+      const HGCalGeometry& hgcGeo = *geoHandle;
+
+      for(HGCRecHitCollection::const_iterator hitIt=pfhits->begin(); hitIt!=pfhits->end(); hitIt++)
+	{
+	  double en=hitIt->energy()*1e6; //energy in keV
+	  if(en<hitThresholds_[i]) continue;
+	  
+	  hgcEvt_.hit_type[hgcEvt_.nhits]=i;
+	  unsigned int detId=hitIt->id();
+	  int layer= ((detId>>19)&0x1f);
+	  hgcEvt_.hit_layer[hgcEvt_.nhits]=layer;
+
+	  //const FlatTrd *thisCell = static_cast<const FlatTrd*>(hgcGeo.getGeometry(detId));
+	  const GlobalPoint pos( std::move( hgcGeo.getPosition( detId ) ) );
+
+	  hgcEvt_.hit_x[hgcEvt_.nhits]=pos.x();
+	  hgcEvt_.hit_y[hgcEvt_.nhits]=pos.y();
+	  hgcEvt_.hit_z[hgcEvt_.nhits]=pos.z();
+	  hgcEvt_.hit_edep[hgcEvt_.nhits]=en;
+	  hgcEvt_.nhits++;
+
+	  if(hgcEvt_.nhits>=MAXHITS) break;
+	}
     }
- 
+  
   //fill tree
   if(hgcEvt_.nhits>0)  t_->Fill();
+
+  cout << hgcEvt_.nhits << " HGC hits for " << hgcEvt_.ngen << " generated particles" << endl;
+
 }
 
 

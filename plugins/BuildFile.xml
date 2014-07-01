@@ -4,5 +4,7 @@
 <use name="CommonTools/UtilAlgos"/>
 <use name="DataFormats/HepMCCandidate"/>
 <use name="DataFormats/TrackReco"/>
+<use name="DataFormats/HGCRecHit"/>
+<use name="Geometry/FCalGeometry"/>
 <use name="root"/>
 <flags EDM_PLUGIN="1"/>

@@ -54,12 +54,12 @@ namespace HGCEvent
     t->Branch("tk_nhits",   hgcEvt.tk_nhits,   "tk_nhits[ntk]/F"); 
     
     t->Branch("nhits",     &hgcEvt.nhits,      "nhits/I");
-    t->Branch("hittype",    hgcEvt.hit_type,   "hit_type[nhits]/I");
-    t->Branch("hitlayer",   hgcEvt.hit_layer,  "hit_layer[nhits]/I");
-    t->Branch("hitx",       hgcEvt.hit_x,      "hit_x[nhits]/I");
-    t->Branch("hity",       hgcEvt.hit_y,      "hit_y[nhits]/I");
-    t->Branch("hitz",       hgcEvt.hit_z,      "hit_z[nhits]/I");
-    t->Branch("hitedep",    hgcEvt.hit_edep,   "hit_edep[nhits]/F");
+    t->Branch("hit_type",   hgcEvt.hit_type,   "hit_type[nhits]/I");
+    t->Branch("hit_layer",  hgcEvt.hit_layer,  "hit_layer[nhits]/I");
+    t->Branch("hit_x",      hgcEvt.hit_x,      "hit_x[nhits]/I");
+    t->Branch("hit_y",      hgcEvt.hit_y,      "hit_y[nhits]/I");
+    t->Branch("hit_z",      hgcEvt.hit_z,      "hit_z[nhits]/I");
+    t->Branch("hit_edep",   hgcEvt.hit_edep,   "hit_edep[nhits]/F");
   }
   
 

@@ -33,7 +33,8 @@ class HGCAnalyzer : public edm::EDAnalyzer
  private:
 
   std::string genSource_,trackSource_;
-  std::vector<std::string> hitCollections_;
+  std::vector<std::string> geometrySource_,hitCollections_;
+  std::vector<double> hitThresholds_;
   TTree *t_;
   HGCEvent::HGCEvent_t hgcEvt_;
 };
