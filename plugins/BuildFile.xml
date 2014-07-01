@@ -1,0 +1,8 @@
+<use name="FWCore/Framework"/>
+<use name="FWCore/Utilities"/>
+<use name="SimG4CMS/Calo"/>
+<use name="CommonTools/UtilAlgos"/>
+<use name="DataFormats/HepMCCandidate"/>
+<use name="DataFormats/TrackReco"/>
+<use name="root"/>
+<flags EDM_PLUGIN="1"/>
