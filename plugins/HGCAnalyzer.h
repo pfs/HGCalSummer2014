@@ -10,6 +10,12 @@
 #include "FWCore/Framework/interface/MakerMacros.h"
 
 #include "DataFormats/Candidate/interface/Candidate.h"
+#include "TrackingTools/MaterialEffects/interface/PropagatorWithMaterial.h"
+#include "DataFormats/GeometrySurface/interface/BoundDisk.h"
+#include "Geometry/TrackerGeometryBuilder/interface/TrackerGeometry.h"
+#include "MagneticField/Engine/interface/MagneticField.h"
+
+#include "Geometry/FCalGeometry/interface/HGCalGeometry.h"
 
 #include "UserCode/HGCalSummer2014/interface/HGCEventSummary.h"
 
@@ -32,11 +38,17 @@ class HGCAnalyzer : public edm::EDAnalyzer
 
  private:
 
+  void initTrackPropagators(edm::ESHandle<MagneticField> &bField,std::map<int,const HGCalGeometry *> &hgcGeometries);
+
   std::string genSource_,trackSource_;
   std::vector<std::string> geometrySource_,hitCollections_;
   std::vector<double> hitThresholds_;
+
   TTree *t_;
   HGCEvent::HGCEvent_t hgcEvt_;
+
+  PropagatorWithMaterial *eTkPropagator_,*piTkPropagator_;
+  std::map<int, ReferenceCountingPointer<BoundDisk> > plusSurface_, minusSurface_;
 };
  
 

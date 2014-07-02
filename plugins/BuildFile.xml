@@ -6,5 +6,12 @@
 <use name="DataFormats/TrackReco"/>
 <use name="DataFormats/HGCRecHit"/>
 <use name="Geometry/FCalGeometry"/>
+<use name="Geometry/TrackerGeometryBuilder"/>
+<use name="DataFormats/GeometrySurface"/>
+<use name="DataFormats/TrajectorySeed"/>
+<use name="TrackingTools/TrajectoryState"/>
+<use name="TrackingTools/MaterialEffects"/>
+<use name="MagneticField/Engine"/>
+<use name="MagneticField/Records"/>
 <use name="root"/>
 <flags EDM_PLUGIN="1"/>

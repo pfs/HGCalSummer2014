@@ -25,6 +25,7 @@ namespace HGCEvent
     Float_t gen_pt[MAXGENPART], gen_eta[MAXGENPART], gen_phi[MAXGENPART], gen_en[MAXGENPART];
     Int_t ntk;
     Float_t tk_pt[MAXGENPART], tk_eta[MAXGENPART], tk_phi[MAXGENPART], tk_chi2[MAXGENPART],tk_nhits[MAXGENPART];
+    Float_t tk_eehit_x[MAXGENPART], tk_eehit_y[MAXGENPART],tk_hefhit_x[MAXGENPART], tk_hefhit_y[MAXGENPART],tk_hebhit_x[MAXGENPART], tk_hebhit_y[MAXGENPART];
     Int_t nhits;
     Int_t hit_type[MAXHITS], hit_layer[MAXHITS];
     Float_t hit_x[MAXHITS], hit_y[MAXHITS], hit_z[MAXHITS], hit_edep[MAXHITS];
@@ -46,12 +47,18 @@ namespace HGCEvent
     t->Branch("gen_phi",    hgcEvt.gen_phi,    "gen_phi[ngen]/F");
     t->Branch("gen_en",     hgcEvt.gen_en,     "gen_en[ngen]/F"); 
 
-    t->Branch("ntk",       &hgcEvt.ntk,        "ntk/I");
-    t->Branch("tk_pt",      hgcEvt.tk_pt,      "tk_pt[ntk]/I");
-    t->Branch("tk_eta",     hgcEvt.tk_eta,     "tk_eta[ntk]/F");
-    t->Branch("tk_phi",     hgcEvt.tk_phi,     "tk_phi[ntk]/F");
-    t->Branch("tk_chi2",    hgcEvt.tk_chi2,    "tk_chi2[ntk]/F");
-    t->Branch("tk_nhits",   hgcEvt.tk_nhits,   "tk_nhits[ntk]/F"); 
+    t->Branch("ntk",         &hgcEvt.ntk,          "ntk/I");
+    t->Branch("tk_pt",        hgcEvt.tk_pt,        "tk_pt[ntk]/I");
+    t->Branch("tk_eta",       hgcEvt.tk_eta,       "tk_eta[ntk]/F");
+    t->Branch("tk_phi",       hgcEvt.tk_phi,       "tk_phi[ntk]/F");
+    t->Branch("tk_chi2",      hgcEvt.tk_chi2,      "tk_chi2[ntk]/F");
+    t->Branch("tk_nhits",     hgcEvt.tk_nhits,     "tk_nhits[ntk]/F"); 
+    t->Branch("tk_eehit_x",   hgcEvt.tk_eehit_x,   "tk_eehit_x[ntk]/F"); 
+    t->Branch("tk_eehit_y",   hgcEvt.tk_eehit_y,   "tk_eehit_y[ntk]/F"); 
+    t->Branch("tk_hefhit_x",  hgcEvt.tk_hefhit_x,  "tk_hefhit_x[ntk]/F"); 
+    t->Branch("tk_hefhit_y",  hgcEvt.tk_hefhit_y,  "tk_hefhit_y[ntk]/F"); 
+    t->Branch("tk_hebhit_x",  hgcEvt.tk_hebhit_x,  "tk_hebhit_x[ntk]/F"); 
+    t->Branch("tk_hebhit_y",  hgcEvt.tk_hebhit_y,  "tk_hebhit_y[ntk]/F"); 
     
     t->Branch("nhits",     &hgcEvt.nhits,      "nhits/I");
     t->Branch("hit_type",   hgcEvt.hit_type,   "hit_type[nhits]/I");
