@@ -50,7 +50,7 @@ namespace HGCEvent
     t->Branch("gen_en",     hgcEvt.gen_en,     "gen_en[ngen]/F"); 
 
     t->Branch("ntk",         &hgcEvt.ntk,          "ntk/I");
-    t->Branch("tk_pt",        hgcEvt.tk_pt,        "tk_pt[ntk]/I");
+    t->Branch("tk_pt",        hgcEvt.tk_pt,        "tk_pt[ntk]/F");
     t->Branch("tk_eta",       hgcEvt.tk_eta,       "tk_eta[ntk]/F");
     t->Branch("tk_phi",       hgcEvt.tk_phi,       "tk_phi[ntk]/F");
     t->Branch("tk_chi2",      hgcEvt.tk_chi2,      "tk_chi2[ntk]/F");
