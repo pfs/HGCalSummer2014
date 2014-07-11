@@ -24,9 +24,10 @@ using namespace std;
 //
 HGCAnalyzer::HGCAnalyzer( const edm::ParameterSet &iConfig ) : 
   t_(0), 
-  eTkPropagator_(0),
   piTkPropagator_(0)
 {
+  std::cout << "[HGCAnalyzer::CTOR]" << std::endl; 
+
   genSource_       = iConfig.getParameter< std::string >("genSource");
   trackSource_     = iConfig.getParameter< std::string >("trackSource");
   geometrySource_  = iConfig.getParameter< std::vector<std::string> >("geometrySource");
@@ -46,7 +47,7 @@ HGCAnalyzer::~HGCAnalyzer()
 //
 void HGCAnalyzer::initTrackPropagators(edm::ESHandle<MagneticField> &bField,std::map<int,const HGCalGeometry *> &hgcGeometries)
 {
-  eTkPropagator_  = new PropagatorWithMaterial(alongMomentum,0.000511,bField.product());
+  std::cout << "[HGCAnalyzer::initTrackPropagators]" << std::endl;
   piTkPropagator_ = new PropagatorWithMaterial(alongMomentum,0.1396,  bField.product());
   
   Surface::RotationType rot; //unit rotation matrix
@@ -54,14 +55,26 @@ void HGCAnalyzer::initTrackPropagators(edm::ESHandle<MagneticField> &bField,std:
       it!= hgcGeometries.end();
       it++)
     {
-
+      std::cout << "HGC subdet: " << it->first << std::endl;
       const HGCalDDDConstants &dddCons=it->second->topology().dddConstants();
-      float Z(dddCons.getFirstTrForm()->h3v.z());
-      float Radius(dddCons.getFirstModule(true)->tl+dddCons.getFirstTrForm()->h3v.perp());
-      std::cout << "HGC subdet: " << it->first << " z=" << Z << " radius=" << Radius << std::endl;
 
-      minusSurface_[it->first] = ReferenceCountingPointer<BoundDisk> ( new BoundDisk( Surface::PositionType(0,0,-Z),  rot, new SimpleDiskBounds( 0, Radius,  -0.001, 0.001)));
-      plusSurface_[it->first]  = ReferenceCountingPointer<BoundDisk> ( new BoundDisk( Surface::PositionType(0,0,+Z),  rot, new SimpleDiskBounds( 0, Radius,  -0.001, 0.001)));
+      std::vector< ReferenceCountingPointer<BoundDisk> > iMinusSurfaces, iPlusSurfaces;
+      std::vector<HGCalDDDConstants::hgtrform>::const_iterator firstLayerIt = dddCons.getFirstTrForm();
+      std::vector<HGCalDDDConstants::hgtrform>::const_iterator lastLayerIt  = dddCons.getLastTrForm();
+      for(std::vector<HGCalDDDConstants::hgtrform>::const_iterator layerIt=firstLayerIt; layerIt!=lastLayerIt; layerIt++)
+	{
+	  float Z(layerIt->h3v.z());
+	  float Radius(dddCons.getLastModule(true)->tl+layerIt->h3v.perp());
+
+	  std::cout << " z=" << Z << std::flush;
+
+	  iMinusSurfaces.push_back(ReferenceCountingPointer<BoundDisk> ( new BoundDisk( Surface::PositionType(0,0,-Z),  rot, new SimpleDiskBounds( 0, Radius,  -0.001, 0.001))));
+	  iPlusSurfaces.push_back(ReferenceCountingPointer<BoundDisk> ( new BoundDisk( Surface::PositionType(0,0,+Z),  rot, new SimpleDiskBounds( 0, Radius,  -0.001, 0.001))));
+	}
+      std::cout << " | total " << minusSurface_.size() << " layer" << std::endl;
+
+      minusSurface_[it->first] = iMinusSurfaces;
+      plusSurface_[it->first]  = iPlusSurfaces;
     }
 }  
 
@@ -138,7 +151,7 @@ void HGCAnalyzer::analyze( const edm::Event &iEvent, const edm::EventSetup &iSet
   hgcEvt_.ntk=0;
   edm::ESHandle<MagneticField> bField;
   iSetup.get<IdealMagneticFieldRecord>().get(bField);
-  if(eTkPropagator_==0) initTrackPropagators(bField,hgcGeometries);
+  if(piTkPropagator_==0) initTrackPropagators(bField,hgcGeometries);
   edm::Handle<reco::TrackCollection> tracks;
   iEvent.getByLabel(edm::InputTag(trackSource_), tracks);
   edm::ESHandle<TrackerGeometry> tkGeom;
@@ -157,18 +170,20 @@ void HGCAnalyzer::analyze( const edm::Event &iEvent, const edm::EventSetup &iSet
       //track propagation to HGC surfaces based on 
       //https://cmssdt.cern.ch/SDT/lxr/source/RecoEgamma/EgammaPhotonProducers/src/ConversionProducer.cc?v=CMSSW_6_2_0_SLHC10
       const TrajectoryStateOnSurface myTSOS = trajectoryStateTransform::outerStateOnSurface(*tIt, *(tkGeom.product()), bField.product());
-      std::map<int, ReferenceCountingPointer<BoundDisk> >::iterator itBegin( myTSOS.globalPosition().z()>0 ? plusSurface_.begin() : minusSurface_.begin() );
-      std::map<int, ReferenceCountingPointer<BoundDisk> >::iterator itEnd  ( myTSOS.globalPosition().z()>0 ? plusSurface_.end()   : minusSurface_.end() );
-      for(std::map<int, ReferenceCountingPointer<BoundDisk> >::iterator it = itBegin; it!=itEnd; it++)
+      std::map<int, std::vector<ReferenceCountingPointer<BoundDisk> > >::iterator itBegin( myTSOS.globalPosition().z()>0 ? plusSurface_.begin() : minusSurface_.begin() );
+      std::map<int, std::vector<ReferenceCountingPointer<BoundDisk> > >::iterator itEnd  ( myTSOS.globalPosition().z()>0 ? plusSurface_.end()   : minusSurface_.end() );
+      for(std::map<int, std::vector<ReferenceCountingPointer<BoundDisk> > >::iterator it = itBegin; it!=itEnd; it++)
 	{
-	  //TrajectoryStateOnSurface eStateAtSurface   = eTkPropagator_->propagate  (myTSOS, *(it->second) );
-	  TrajectoryStateOnSurface piStateAtSurface  = piTkPropagator_->propagate  (myTSOS, *(it->second) );
-	  if(piStateAtSurface.isValid())
+	  for(size_t ilayer=0; ilayer<it->second.size(); ilayer++)
 	    {
-	      GlobalPoint pt=piStateAtSurface.globalPosition();
-	      if(it->first==0)   { hgcEvt_.tk_eehit_x[hgcEvt_.ntk]=pt.x();  hgcEvt_.tk_eehit_y[hgcEvt_.ntk]=pt.y();  }
-	      if(it->first==1)   { hgcEvt_.tk_hefhit_x[hgcEvt_.ntk]=pt.x(); hgcEvt_.tk_hefhit_y[hgcEvt_.ntk]=pt.y(); }
-	      if(it->first==2)   { hgcEvt_.tk_hebhit_x[hgcEvt_.ntk]=pt.x(); hgcEvt_.tk_hebhit_y[hgcEvt_.ntk]=pt.y(); }
+	      TrajectoryStateOnSurface piStateAtSurface  = piTkPropagator_->propagate  (myTSOS, *((it->second)[ilayer]) );
+	      if(piStateAtSurface.isValid())
+		{
+		  GlobalPoint pt=piStateAtSurface.globalPosition();
+		  if(it->first==0)   { hgcEvt_.tk_eehit_x[hgcEvt_.ntk][ilayer]=pt.x();  hgcEvt_.tk_eehit_y[hgcEvt_.ntk][ilayer]=pt.y();  }
+		  if(it->first==1)   { hgcEvt_.tk_hefhit_x[hgcEvt_.ntk][ilayer]=pt.x(); hgcEvt_.tk_hefhit_y[hgcEvt_.ntk][ilayer]=pt.y(); }
+		  if(it->first==2)   { hgcEvt_.tk_hebhit_x[hgcEvt_.ntk][ilayer]=pt.x(); hgcEvt_.tk_hebhit_y[hgcEvt_.ntk][ilayer]=pt.y(); }
+		}
 	    }
 	}
       hgcEvt_.ntk++;

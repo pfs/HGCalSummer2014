@@ -47,8 +47,8 @@ class HGCAnalyzer : public edm::EDAnalyzer
   TTree *t_;
   HGCEvent::HGCEvent_t hgcEvt_;
 
-  PropagatorWithMaterial *eTkPropagator_,*piTkPropagator_;
-  std::map<int, ReferenceCountingPointer<BoundDisk> > plusSurface_, minusSurface_;
+  PropagatorWithMaterial *piTkPropagator_;
+  std::map<int, std::vector<ReferenceCountingPointer<BoundDisk> > > plusSurface_, minusSurface_;
 };
  
 
