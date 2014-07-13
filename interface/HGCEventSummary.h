@@ -21,13 +21,14 @@ namespace HGCEvent
   {
     Int_t run,lumi,event;
     Int_t ngen,gen_nbrem,gen_nconv;
-    Int_t gen_id[MAXGENPART],gen_vtx[MAXGENPART],gen_vty[MAXGENPART],gen_vtz[MAXGENPART];
+    Int_t gen_id[MAXGENPART];
+    Float_t gen_vtx[MAXGENPART],gen_vty[MAXGENPART],gen_vtz[MAXGENPART];
     Float_t gen_pt[MAXGENPART], gen_eta[MAXGENPART], gen_phi[MAXGENPART], gen_en[MAXGENPART];
     Int_t ntk;
     Float_t tk_pt[MAXGENPART], tk_eta[MAXGENPART], tk_phi[MAXGENPART], tk_chi2[MAXGENPART],tk_nhits[MAXGENPART];
-    Float_t tk_eehit_x[MAXGENPART][31],  tk_eehit_y[MAXGENPART][31];
-    Float_t tk_hefhit_x[MAXGENPART][12], tk_hefhit_y[MAXGENPART][12];
-    Float_t tk_hebhit_x[MAXGENPART][10], tk_hebhit_y[MAXGENPART][10];
+    Float_t tk_eehit_x[MAXGENPART][30],  tk_eehit_y[MAXGENPART][30];
+    Float_t tk_hefhit_x[MAXGENPART][30], tk_hefhit_y[MAXGENPART][30];
+    Float_t tk_hebhit_x[MAXGENPART][30], tk_hebhit_y[MAXGENPART][30];
     Int_t nhits;
     Int_t hit_type[MAXHITS], hit_layer[MAXHITS];
     Float_t hit_x[MAXHITS], hit_y[MAXHITS], hit_z[MAXHITS], hit_edep[MAXHITS];
@@ -46,9 +47,9 @@ namespace HGCEvent
     t->Branch("gen_nbrem", &hgcEvt.gen_nbrem,  "gen_nbrem/I");
     t->Branch("gen_nconv", &hgcEvt.gen_nconv,  "gen_nconv/I");
     t->Branch("gen_id",     hgcEvt.gen_id,     "gen_id[ngen]/I");
-    t->Branch("gen_vtx",    hgcEvt.gen_vtx,    "gen_vtx[ngen]/I");
-    t->Branch("gen_vty",    hgcEvt.gen_vty,    "gen_vty[ngen]/I");
-    t->Branch("gen_vtz",    hgcEvt.gen_vtz,    "gen_vtz[ngen]/I");
+    t->Branch("gen_vtx",    hgcEvt.gen_vtx,    "gen_vtx[ngen]/F");
+    t->Branch("gen_vty",    hgcEvt.gen_vty,    "gen_vty[ngen]/F");
+    t->Branch("gen_vtz",    hgcEvt.gen_vtz,    "gen_vtz[ngen]/F");
     t->Branch("gen_pt",     hgcEvt.gen_pt,     "gen_pt[ngen]/F");
     t->Branch("gen_eta",    hgcEvt.gen_eta,    "gen_eta[ngen]/F");
     t->Branch("gen_phi",    hgcEvt.gen_phi,    "gen_phi[ngen]/F");

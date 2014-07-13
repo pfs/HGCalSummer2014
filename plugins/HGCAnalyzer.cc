@@ -62,23 +62,31 @@ void HGCAnalyzer::initTrackPropagators(edm::ESHandle<MagneticField> &bField,std:
       std::cout << "HGC subdet: " << it->first << std::endl;
       const HGCalDDDConstants &dddCons=it->second->topology().dddConstants();
 
+      std::map<float,float> zrhoCoord;
       std::vector< ReferenceCountingPointer<BoundDisk> > iMinusSurfaces, iPlusSurfaces;
       std::vector<HGCalDDDConstants::hgtrform>::const_iterator firstLayerIt = dddCons.getFirstTrForm();
       std::vector<HGCalDDDConstants::hgtrform>::const_iterator lastLayerIt  = dddCons.getLastTrForm();
       for(std::vector<HGCalDDDConstants::hgtrform>::const_iterator layerIt=firstLayerIt; layerIt!=lastLayerIt; layerIt++)
 	{
-	  float Z(layerIt->h3v.z());
+	  float Z(fabs(layerIt->h3v.z()));
 	  float Radius(dddCons.getLastModule(true)->tl+layerIt->h3v.perp());
+	  zrhoCoord[Z]=Radius;
+	}
+
+      for(std::map<float,float>::iterator it=zrhoCoord.begin(); it!= zrhoCoord.end(); it++)
+	{
+	  float Z(it->first);
+	  float Radius(it->second);
 
 	  std::cout << " z=" << Z << std::flush;
 
 	  iMinusSurfaces.push_back(ReferenceCountingPointer<BoundDisk> ( new BoundDisk( Surface::PositionType(0,0,-Z),  rot, new SimpleDiskBounds( 0, Radius,  -0.001, 0.001))));
 	  iPlusSurfaces.push_back(ReferenceCountingPointer<BoundDisk> ( new BoundDisk( Surface::PositionType(0,0,+Z),  rot, new SimpleDiskBounds( 0, Radius,  -0.001, 0.001))));
 	}
-      std::cout << " | total " << minusSurface_.size() << " layer" << std::endl;
 
       minusSurface_[it->first] = iMinusSurfaces;
       plusSurface_[it->first]  = iPlusSurfaces;
+      std::cout << " | total " << minusSurface_[it->first].size() << " layers for subdet #" << it->first << std::endl;
     }
 }  
 
@@ -129,7 +137,7 @@ void HGCAnalyzer::analyze( const edm::Event &iEvent, const edm::EventSetup &iSet
 	  //const math::XYZTLorentzVectorD &p4 = tk.momentum() ;
 	  int vtxIdx=tk.vertIndex();
 	  if(vtxIdx<0) continue;
-	  if(vtxIdx<=(int) isimvtx) continue;
+	  if(vtxIdx!=(int) isimvtx) continue;
 	  int pid=tk.type();
 	  if( (abs(pid)==11 || abs(pid)==22) )
 	    {
@@ -139,7 +147,7 @@ void HGCAnalyzer::analyze( const edm::Event &iEvent, const edm::EventSetup &iSet
 	  npart++;
 	}
       if(npart<2) continue;
-
+      
       //e/gamma in tracker volume
       if(npart==2 && isimvtx>1 && isInTracker)
 	{
@@ -149,7 +157,7 @@ void HGCAnalyzer::analyze( const edm::Event &iEvent, const edm::EventSetup &iSet
 	}
       
       //if not e/gamma type and compatible with calorimeter z store all 
-      if(isimvtx>1 && isInTracker) continue;
+      if(isInTracker) continue;
       for (unsigned int isimtk = 0; isimtk < SimTk->size() ; isimtk++ ) 
 	{
 	  const SimTrack &tk=SimTk->at(isimtk);
