@@ -126,12 +126,12 @@ void HGCAnalyzer::analyze( const edm::Event &iEvent, const edm::EventSetup &iSet
       for (unsigned int isimtk = 0; isimtk < SimTk->size() ; isimtk++ ) 
 	{
 	  const SimTrack &tk=SimTk->at(isimtk);
-	  const math::XYZTLorentzVectorD &p4 = tk.momentum() ;
+	  //const math::XYZTLorentzVectorD &p4 = tk.momentum() ;
 	  int vtxIdx=tk.vertIndex();
 	  if(vtxIdx<0) continue;
 	  if(vtxIdx<=(int) isimvtx) continue;
 	  int pid=tk.type();
-	  if( (abs(pid)==11 || abs(pid)==22) && p4.energy()>5 ) 
+	  if( (abs(pid)==11 || abs(pid)==22) )
 	    {
 	      nelec  += (abs(pid)==11);
 	      ngamma += (abs(pid)==22);
@@ -143,8 +143,8 @@ void HGCAnalyzer::analyze( const edm::Event &iEvent, const edm::EventSetup &iSet
       //e/gamma in tracker volume
       if(npart==2 && isimvtx>1 && isInTracker)
 	{
-	  if(ngamma==1 && nelec==1)      hgcEvt_.gen_nbrem++;
-	  else if(ngamma==0 && nelec==2) hgcEvt_.gen_nconv++;
+	  if(ngamma==1 && nelec==1) hgcEvt_.gen_nbrem++;
+	  if(ngamma==0 && nelec==2) hgcEvt_.gen_nconv++;
 	  continue;
 	}
       
