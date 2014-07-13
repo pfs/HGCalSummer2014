@@ -40,7 +40,7 @@ class HGCAnalyzer : public edm::EDAnalyzer
 
   void initTrackPropagators(edm::ESHandle<MagneticField> &bField,std::map<int,const HGCalGeometry *> &hgcGeometries);
 
-  std::string genSource_,trackSource_;
+  std::string g4Tracks_,g4Vertices_,trackSource_;
   std::vector<std::string> geometrySource_,hitCollections_;
   std::vector<double> hitThresholds_;
 

@@ -1,6 +1,9 @@
 #include "UserCode/HGCalSummer2014/plugins/HGCAnalyzer.h"
 
-#include "DataFormats/HepMCCandidate/interface/GenParticle.h"
+#include "SimDataFormats/Track/interface/SimTrack.h"
+#include "SimDataFormats/Track/interface/SimTrackContainer.h"
+#include "SimDataFormats/Vertex/interface/SimVertex.h"
+#include "SimDataFormats/Vertex/interface/SimVertexContainer.h"
 
 #include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
 #include "TrackingTools/Records/interface/TransientTrackRecord.h"
@@ -28,7 +31,8 @@ HGCAnalyzer::HGCAnalyzer( const edm::ParameterSet &iConfig ) :
 {
   std::cout << "[HGCAnalyzer::CTOR]" << std::endl; 
 
-  genSource_       = iConfig.getParameter< std::string >("genSource");
+  g4Tracks_        = iConfig.getParameter< std::string >("g4Tracks");
+  g4Vertices_      = iConfig.getParameter< std::string >("g4Vertices");
   trackSource_     = iConfig.getParameter< std::string >("trackSource");
   geometrySource_  = iConfig.getParameter< std::vector<std::string> >("geometrySource");
   hitCollections_  = iConfig.getParameter< std::vector<std::string> >("hitCollections");
@@ -88,22 +92,53 @@ void HGCAnalyzer::analyze( const edm::Event &iEvent, const edm::EventSetup &iSet
   hgcEvt_.event  = t_->GetEntriesFast()+1; //iEvent.id().event();
 
   //get gen level information
-  edm::Handle<edm::View<reco::Candidate> > genParticles;
-  iEvent.getByLabel(edm::InputTag(genSource_), genParticles);
+  //cf. https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideDataFormatSimG4Core
+  edm::Handle<edm::SimTrackContainer> SimTk;
+  iEvent.getByLabel(g4Tracks_,SimTk);
+  edm::Handle<edm::SimVertexContainer> SimVtx;
+  iEvent.getByLabel(g4Vertices_,SimVtx);
   hgcEvt_.ngen=0;
-  for(size_t i = 0; i < genParticles->size(); ++ i)
+
+  //the primary
+  const SimTrack &tk=SimTk->at(0);
+  const math::XYZTLorentzVectorD &p4=tk.momentum() ;
+  hgcEvt_.gen_id[hgcEvt_.ngen]  = tk.type();
+  hgcEvt_.gen_vtx[hgcEvt_.ngen] = 0;
+  hgcEvt_.gen_pt[hgcEvt_.ngen]  = p4.pt();
+  hgcEvt_.gen_eta[hgcEvt_.ngen] = p4.eta();
+  hgcEvt_.gen_phi[hgcEvt_.ngen] = p4.phi();
+  hgcEvt_.gen_en[hgcEvt_.ngen] = p4.energy();
+  hgcEvt_.ngen++;
+
+  //consider only vertices with more than two particles
+  std::map<int,int> vtxMult;
+  for (unsigned int isimtk = 0; isimtk < SimTk->size() ; isimtk++ ) 
     {
-      const reco::GenParticle & p = dynamic_cast<const reco::GenParticle &>( (*genParticles)[i] );
-      if(p.status()!=1) continue;
-      hgcEvt_.gen_id[hgcEvt_.ngen]=p.pdgId();
-      hgcEvt_.gen_pt[hgcEvt_.ngen]=p.pt();
-      hgcEvt_.gen_eta[hgcEvt_.ngen]=p.eta();
-      hgcEvt_.gen_phi[hgcEvt_.ngen]=p.phi();
-      hgcEvt_.gen_en[hgcEvt_.ngen]=p.energy();
-      hgcEvt_.ngen++;
-  
-      //check if limits are respected
-      if(hgcEvt_.ngen>=MAXGENPART) break;
+      const SimTrack &tk=SimTk->at(isimtk);
+      int vtxIdx=tk.vertIndex();
+      if(vtxIdx<=0) continue;
+      if(vtxMult.find(vtxIdx)==vtxMult.end()) vtxMult[vtxIdx]=0;
+      vtxMult[vtxIdx]++;
+    }
+  for(std::map<int,int>::iterator vtxIt=vtxMult.begin(); vtxIt!=vtxMult.end(); vtxIt++)
+    {
+      if(vtxIt->second<2) continue;
+      for (unsigned int isimtk = 0; isimtk < SimTk->size() ; isimtk++ )
+	{
+	  const SimTrack &tk=SimTk->at(isimtk);
+	  int vtxIdx=tk.vertIndex();
+	  if(vtxIdx!=vtxIt->first) continue;
+	  const math::XYZTLorentzVectorD &p4 = tk.momentum() ;
+	  hgcEvt_.gen_id[hgcEvt_.ngen]       = tk.type();
+	  hgcEvt_.gen_vtx[hgcEvt_.ngen]      = vtxIdx;
+	  hgcEvt_.gen_pt[hgcEvt_.ngen]       = p4.pt();
+	  hgcEvt_.gen_eta[hgcEvt_.ngen]      = p4.eta();
+	  hgcEvt_.gen_phi[hgcEvt_.ngen]      = p4.phi();
+	  hgcEvt_.gen_en[hgcEvt_.ngen]       = p4.energy();
+	  hgcEvt_.ngen++;
+	  //check if limits are respected
+	  if(hgcEvt_.ngen>=MAXGENPART) break;
+	}
     }
   
   //PF clusters

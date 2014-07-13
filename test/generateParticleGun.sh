@@ -21,7 +21,11 @@ echo "cfi snippet can be found in ${CFIFILE}"
 
 #run the simulation
 scram b
-cmsDriver.py ${CFIFILE} -n ${NEVENTS} --conditions auto:upgradePLS3 --eventcontent FEVTDEBUG --relval 10000,100 -s GEN,SIM --datatier GEN-SIM --beamspot Gauss --customise SLHCUpgradeSimulations/Configuration/combinedCustoms.cust_2023HGCalMuon --geometry Extended2023HGCalMuon,Extended2023HGCalMuonReco --magField 38T_PostLS1 --fileout file:step1.root 
+cmsDriver.py ${CFIFILE} -n ${NEVENTS} --conditions auto:upgradePLS3 --eventcontent FEVTDEBUG --relval 10000,100 -s GEN,SIM --datatier GEN-SIM --beamspot Gauss --customise SLHCUpgradeSimulations/Configuration/combinedCustoms.cust_2023HGCalMuon --geometry Extended2023HGCalMuon,Extended2023HGCalMuonReco --magField 38T_PostLS1 --no_exec --fileout file:step1.root 
+
+echo "process.g4SimHits.StackingAction.SaveFirstLevelSecondary = True" >> SingleParticleFlat_cfi_py_GEN_SIM.py
+cmsRun SingleParticleFlat_cfi_py_GEN_SIM.py
+
 cmsDriver.py step2 --conditions auto:upgradePLS3 -n -1 --eventcontent FEVTDEBUGHLT -s DIGI:pdigi_valid,L1,DIGI2RAW --datatier GEN-SIM-DIGI-RAW --customise SLHCUpgradeSimulations/Configuration/combinedCustoms.cust_2023HGCalMuon --geometry Extended2023HGCalMuon,Extended2023HGCalMuonReco --magField 38T_PostLS1 --filein file:step1.root --fileout file:step2.root
 cmsDriver.py step3 --conditions auto:upgradePLS3 -n -1 --eventcontent FEVTDEBUGHLT,DQM -s RAW2DIGI,L1Reco,RECO,VALIDATION,DQM --datatier GEN-SIM-RECO,DQM --customise SLHCUpgradeSimulations/Configuration/combinedCustoms.cust_2023HGCalMuon --geometry Extended2023HGCalMuon,Extended2023HGCalMuonReco --magField 38T_PostLS1 --filein file:step2.root --fileout file:ParticleGun_${PIDTOGENERATE}_RECO.root     
 
