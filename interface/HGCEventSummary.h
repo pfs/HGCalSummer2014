@@ -20,8 +20,8 @@ namespace HGCEvent
   struct HGCEvent_t
   {
     Int_t run,lumi,event;
-    Int_t ngen;
-    Int_t gen_id[MAXGENPART],gen_vtx[MAXGENPART];
+    Int_t ngen,gen_nbrem,gen_nconv;
+    Int_t gen_id[MAXGENPART],gen_vtx[MAXGENPART],gen_vty[MAXGENPART],gen_vtz[MAXGENPART];
     Float_t gen_pt[MAXGENPART], gen_eta[MAXGENPART], gen_phi[MAXGENPART], gen_en[MAXGENPART];
     Int_t ntk;
     Float_t tk_pt[MAXGENPART], tk_eta[MAXGENPART], tk_phi[MAXGENPART], tk_chi2[MAXGENPART],tk_nhits[MAXGENPART];
@@ -43,8 +43,12 @@ namespace HGCEvent
     t->Branch("event",     &hgcEvt.event,      "event/I");
     
     t->Branch("ngen",      &hgcEvt.ngen,       "ngen/I");
+    t->Branch("gen_nbrem", &hgcEvt.gen_nbrem,  "gen_nbrem/I");
+    t->Branch("gen_nconv", &hgcEvt.gen_nconv,  "gen_nconv/I");
     t->Branch("gen_id",     hgcEvt.gen_id,     "gen_id[ngen]/I");
     t->Branch("gen_vtx",    hgcEvt.gen_vtx,    "gen_vtx[ngen]/I");
+    t->Branch("gen_vty",    hgcEvt.gen_vty,    "gen_vty[ngen]/I");
+    t->Branch("gen_vtz",    hgcEvt.gen_vtz,    "gen_vtz[ngen]/I");
     t->Branch("gen_pt",     hgcEvt.gen_pt,     "gen_pt[ngen]/F");
     t->Branch("gen_eta",    hgcEvt.gen_eta,    "gen_eta[ngen]/F");
     t->Branch("gen_phi",    hgcEvt.gen_phi,    "gen_phi[ngen]/F");
@@ -82,8 +86,12 @@ namespace HGCEvent
     t->SetBranchAddress("event",     &hgcEvt.event);
     
     t->SetBranchAddress("ngen",      &hgcEvt.ngen);
+    t->SetBranchAddress("gen_nbrem", &hgcEvt.gen_nbrem);
+    t->SetBranchAddress("gen_nconv", &hgcEvt.gen_nconv);
     t->SetBranchAddress("gen_id",     hgcEvt.gen_id);
     t->SetBranchAddress("gen_vtx",    hgcEvt.gen_vtx);
+    t->SetBranchAddress("gen_vty",    hgcEvt.gen_vty);
+    t->SetBranchAddress("gen_vtz",    hgcEvt.gen_vtz);
     t->SetBranchAddress("gen_pt",     hgcEvt.gen_pt);
     t->SetBranchAddress("gen_eta",    hgcEvt.gen_eta);
     t->SetBranchAddress("gen_phi",    hgcEvt.gen_phi);

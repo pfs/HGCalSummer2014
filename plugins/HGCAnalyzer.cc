@@ -98,44 +98,75 @@ void HGCAnalyzer::analyze( const edm::Event &iEvent, const edm::EventSetup &iSet
   edm::Handle<edm::SimVertexContainer> SimVtx;
   iEvent.getByLabel(g4Vertices_,SimVtx);
   hgcEvt_.ngen=0;
+  hgcEvt_.gen_nbrem=0;
+  hgcEvt_.gen_nconv=0;
 
   //the primary
   const SimTrack &tk=SimTk->at(0);
-  const math::XYZTLorentzVectorD &p4=tk.momentum() ;
-  hgcEvt_.gen_id[hgcEvt_.ngen]  = tk.type();
-  hgcEvt_.gen_vtx[hgcEvt_.ngen] = 0;
-  hgcEvt_.gen_pt[hgcEvt_.ngen]  = p4.pt();
-  hgcEvt_.gen_eta[hgcEvt_.ngen] = p4.eta();
-  hgcEvt_.gen_phi[hgcEvt_.ngen] = p4.phi();
-  hgcEvt_.gen_en[hgcEvt_.ngen] = p4.energy();
+  const math::XYZTLorentzVectorD& pos= SimVtx->at(0).position();
+  const math::XYZTLorentzVectorD &p4 = tk.momentum() ;
+  hgcEvt_.gen_id[hgcEvt_.ngen]       = tk.type();
+  hgcEvt_.gen_vtx[hgcEvt_.ngen]      = pos.x();
+  hgcEvt_.gen_vtx[hgcEvt_.ngen]      = pos.y();
+  hgcEvt_.gen_vtx[hgcEvt_.ngen]      = pos.z();
+  hgcEvt_.gen_pt[hgcEvt_.ngen]       = p4.pt();
+  hgcEvt_.gen_eta[hgcEvt_.ngen]      = p4.eta();
+  hgcEvt_.gen_phi[hgcEvt_.ngen]      = p4.phi();
+  hgcEvt_.gen_en[hgcEvt_.ngen]       = p4.energy();
   hgcEvt_.ngen++;
 
-  //consider only vertices with more than two particles
-  std::map<int,int> vtxMult;
-  for (unsigned int isimtk = 0; isimtk < SimTk->size() ; isimtk++ ) 
+  //analyze vertex by vertex
+  for (unsigned int isimvtx = 1; isimvtx < SimVtx->size() ; isimvtx++ )
     {
-      const SimTrack &tk=SimTk->at(isimtk);
-      int vtxIdx=tk.vertIndex();
-      if(vtxIdx<=0) continue;
-      if(vtxMult.find(vtxIdx)==vtxMult.end()) vtxMult[vtxIdx]=0;
-      vtxMult[vtxIdx]++;
-    }
-  for(std::map<int,int>::iterator vtxIt=vtxMult.begin(); vtxIt!=vtxMult.end(); vtxIt++)
-    {
-      if(vtxIt->second<2) continue;
-      for (unsigned int isimtk = 0; isimtk < SimTk->size() ; isimtk++ )
+      const math::XYZTLorentzVectorD& pos=SimVtx->at(isimvtx).position();
+      bool isInTracker( fabs(pos.z())< 320);
+
+      //check vertex type
+      int npart(0),nelec(0),ngamma(0);
+      for (unsigned int isimtk = 0; isimtk < SimTk->size() ; isimtk++ ) 
+	{
+	  const SimTrack &tk=SimTk->at(isimtk);
+	  const math::XYZTLorentzVectorD &p4 = tk.momentum() ;
+	  int vtxIdx=tk.vertIndex();
+	  if(vtxIdx<0) continue;
+	  if(vtxIdx<=(int) isimvtx) continue;
+	  int pid=tk.type();
+	  if( (abs(pid)==11 || abs(pid)==22) && p4.energy()>5 ) 
+	    {
+	      nelec  += (abs(pid)==11);
+	      ngamma += (abs(pid)==22);
+	    }
+	  npart++;
+	}
+      if(npart<2) continue;
+
+      //e/gamma in tracker volume
+      if(npart==2 && isimvtx>1 && isInTracker)
+	{
+	  if(ngamma==1 && nelec==1)      hgcEvt_.gen_nbrem++;
+	  else if(ngamma==0 && nelec==2) hgcEvt_.gen_nconv++;
+	  continue;
+	}
+      
+      //if not e/gamma type and compatible with calorimeter z store all 
+      if(isimvtx>1 && isInTracker) continue;
+      for (unsigned int isimtk = 0; isimtk < SimTk->size() ; isimtk++ ) 
 	{
 	  const SimTrack &tk=SimTk->at(isimtk);
 	  int vtxIdx=tk.vertIndex();
-	  if(vtxIdx!=vtxIt->first) continue;
+	  if(vtxIdx<0) continue;
+	  if(vtxIdx!=(int)isimvtx) continue;
 	  const math::XYZTLorentzVectorD &p4 = tk.momentum() ;
 	  hgcEvt_.gen_id[hgcEvt_.ngen]       = tk.type();
-	  hgcEvt_.gen_vtx[hgcEvt_.ngen]      = vtxIdx;
+	  hgcEvt_.gen_vtx[hgcEvt_.ngen]      = pos.x();
+	  hgcEvt_.gen_vty[hgcEvt_.ngen]      = pos.y();
+	  hgcEvt_.gen_vtz[hgcEvt_.ngen]      = pos.z();
 	  hgcEvt_.gen_pt[hgcEvt_.ngen]       = p4.pt();
 	  hgcEvt_.gen_eta[hgcEvt_.ngen]      = p4.eta();
 	  hgcEvt_.gen_phi[hgcEvt_.ngen]      = p4.phi();
 	  hgcEvt_.gen_en[hgcEvt_.ngen]       = p4.energy();
 	  hgcEvt_.ngen++;
+
 	  //check if limits are respected
 	  if(hgcEvt_.ngen>=MAXGENPART) break;
 	}
